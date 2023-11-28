@@ -1,4 +1,5 @@
 local win, buf
+local modifiable = true
 
 local cluster = { "Namespaces", "Cluster Members", "Events" }
 local workload = { "CronJobs", "Daemonsets", "Deployments", "Jobs", "StatefulSets", "Pods" }
@@ -35,6 +36,57 @@ local function get_namespaces()
 	return namespaces
 end
 
-create_win()
---get_namespaces()
-redraw(cluster)
+local function close_window()
+	vim.api.nvim_win_close(win, true)
+end
+
+local function get_option()
+	local str = vim.api.nvim_get_current_line()
+	print(str)
+end
+
+local function set_mappings()
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"<cr>",
+		':lua require"k8vim".' .. "get_option()" .. "<cr>",
+		{ nowait = true, noremap = true, silent = true }
+	)
+
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"q",
+		':lua require"k8vim".' .. "close_window()" .. "<cr>",
+		{ nowait = true, noremap = true, silent = true }
+	)
+
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"m",
+		':lua require"k8vim".' .. "toggle_modifiable()" .. "<cr>",
+		{ nowait = true, noremap = true, silent = true }
+	)
+end
+
+local function toggle_modifiable()
+	modifiable = not modifiable
+	vim.api.nvim_buf_set_option(buf, "modifiable", modifiable)
+	print(modifiable)
+end
+
+local function k8vim()
+	create_win()
+	--get_namespaces()
+	set_mappings()
+	redraw(cluster)
+end
+
+return {
+	k8vim = k8vim,
+	close_window = close_window,
+	get_option = get_option,
+	toggle_modifiable = toggle_modifiable,
+}
